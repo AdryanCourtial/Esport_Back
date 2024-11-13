@@ -1,0 +1,6 @@
+{
+  "clientId": "1298991475656495145",
+  "clientSecret": "_A_dwQ7f5fl3Df29iu2_YmWFYmLA34tq",
+  "port": 8000,
+  "redirectUri": "http://localhost:8000/auth/discord/callback"
+}
