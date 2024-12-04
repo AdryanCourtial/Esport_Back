@@ -14,26 +14,24 @@ const PORT: number = parseInt(process.env.PORT as string, 10);
 const app = express();
 
 app.use(cors({
-  origin: 'http://localhost:5173', 
-  credentials: true
+  origin: 'http://localhost:5173', // Frontend qui fait les requêtes
+  credentials: true, 
 }));
 
 app.use(express.json());
 
-// Configuration de express-session
 app.use(session({
-  name: 'monCookieSession',
   secret: 'MonSecretMdp', 
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: false,
+    secure: false, 
     httpOnly: true,
     maxAge: 1000 * 60 * 60,
   }
 }));
 
-// Routes
+// Routes d'authentification
 app.use("/auth", authRoutes);
 
 app.listen(PORT, () => {

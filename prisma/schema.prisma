@@ -26,4 +26,11 @@ model User {
   flags         Int?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+  LastName      String
+  FirstName     String
 }
+
+// model Sector {
+//   id   String @id
+//   Name String
+// }

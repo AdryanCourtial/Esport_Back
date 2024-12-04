@@ -5,7 +5,6 @@ import config from '../../config.json';
 
 const { clientId, clientSecret, redirectUri } = config;
 
-// Variables pour stocker l'utilisateur pour simplifier (cela devrait être dans une base de données en production)
 let currentUser: any = null;
 
 /**
@@ -47,7 +46,6 @@ export const handleCallback = async (req: Request, res: Response): Promise<void>
   console.log("Code d'autorisation reçu :", code);
 
   try {
-    // Échanger le code d'autorisation contre un token d'accès
     console.log("Envoi de la requête pour échanger le code contre un token...");
     const tokenResponse = await axios.post(
       'https://discord.com/api/oauth2/token',
@@ -69,7 +67,6 @@ export const handleCallback = async (req: Request, res: Response): Promise<void>
 
     const { access_token, token_type } = tokenResponse.data;
 
-    // Utiliser le token pour obtenir les informations utilisateur
     console.log("Envoi de la requête pour obtenir les informations utilisateur avec le token...");
     const userResponse = await axios.get('https://discord.com/api/users/@me', {
       headers: {
@@ -81,10 +78,44 @@ export const handleCallback = async (req: Request, res: Response): Promise<void>
 
     console.log("Informations utilisateur récupérées :", userInfo);
 
-    
     currentUser = userInfo;
 
-    // Rediriger vers le frontend (ou une page de succès)
+    const user = await prisma.user.upsert({
+      where: {
+        discordId: userInfo.id,
+      },
+      update: {
+        username: userInfo.username,
+        discriminator: userInfo.discriminator,
+        avatar: userInfo.avatar,
+        globalName: userInfo.global_name,
+        accentColor: userInfo.accent_color,
+        bannerColor: userInfo.banner_color,
+        locale: userInfo.locale,
+        mfaEnabled: userInfo.mfa_enabled,
+        premiumType: userInfo.premium_type,
+        publicFlags: userInfo.public_flags,
+        flags: userInfo.flags,
+      },
+      create: {
+        discordId: userInfo.id,
+        username: userInfo.username,
+        discriminator: userInfo.discriminator,
+        avatar: userInfo.avatar,
+        globalName: userInfo.global_name,
+        accentColor: userInfo.accent_color,
+        bannerColor: userInfo.banner_color,
+        locale: userInfo.locale,
+        mfaEnabled: userInfo.mfa_enabled,
+        premiumType: userInfo.premium_type,
+        publicFlags: userInfo.public_flags,
+        flags: userInfo.flags,
+        
+      },
+    });
+
+    console.log("Utilisateur enregistré ou mis à jour avec succès :", user);
+
     res.redirect('http://localhost:5173');
   } catch (error) {
     console.error('Erreur lors de la récupération du token Discord :', error);

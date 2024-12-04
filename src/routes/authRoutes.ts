@@ -18,7 +18,6 @@ router.post('/logout', (req, res) => {
       console.error("Erreur lors de la déconnexion :", err);
       return res.status(500).send("Erreur lors de la déconnexion");
     }
-    // Supprime explicitement le cookie de session côté client
     res.clearCookie('connect.sid'); 
     res.send("Déconnecté avec succès");
   });
