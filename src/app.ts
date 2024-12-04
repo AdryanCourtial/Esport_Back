@@ -31,6 +31,7 @@ app.use(session({
   }
 }));
 
+
 // Routes d'authentification
 app.use("/auth", authRoutes);
 

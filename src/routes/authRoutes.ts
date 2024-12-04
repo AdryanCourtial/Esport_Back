@@ -1,6 +1,6 @@
 import { Router } from 'express';
 
-import { redirectToDiscord, handleCallback, getUserInfo } from '../controllers/authController';
+import { redirectToDiscord, handleCallback, getUserInfo, updateProfile } from '../controllers/authController';
 
 const router = Router();
 
@@ -11,6 +11,8 @@ router.get('/discord', redirectToDiscord);
 router.get('/discord/callback', handleCallback);
 
 router.get('/userinfo', getUserInfo);
+
+router.post('/update-profile', updateProfile);
 
 router.post('/logout', (req, res) => {
   req.session.destroy((err) => {

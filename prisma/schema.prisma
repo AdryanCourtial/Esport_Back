@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,8 +8,8 @@ datasource db {
 }
 
 model User {
-  id            String   @id @default(uuid())
-  discordId     String   @unique
+  id            String   @id @default(uuid()) // ID unique de l'utilisateur
+  discordId     String   @unique // ID Discord unique
   username      String
   discriminator String
   avatar        String? // L'avatar est optionnel
@@ -26,11 +23,69 @@ model User {
   flags         Int?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-  LastName      String
-  FirstName     String
+  lastName      String
+  firstName     String
+
+  // Relation avec les jeux
+  gameRegistrations GameRegistration[]
+  gameResults       GameResult[]
+
+  // Relation avec la filière (secteur)
+  sector   Sector? @relation(fields: [sectorId], references: [id])
+  sectorId String? // Référence à la filière (secteur)
 }
 
-// model Sector {
-//   id   String @id
-//   Name String
-// }
+model Sector {
+  id   String @id @default(uuid()) // ID unique du secteur
+  Name String // Nom du secteur (filière, comme "Informatique", "Architecture")
+
+  // Relation avec les utilisateurs
+  users User[] // Plusieurs utilisateurs peuvent être dans ce secteur
+}
+
+model GameType {
+  id    String @id @default(uuid()) // ID unique pour le type de jeu
+  name  String // Nom du type de jeu (ex: LOCAL, MULTI)
+  games Game[] // Relation avec les jeux
+}
+
+model Game {
+  id          String   @id @default(uuid()) // ID unique du jeu
+  name        String // Nom du jeu
+  description String? // Description optionnelle du jeu
+  gameTypeId  String // Clé étrangère pour le type de jeu
+  createdAt   DateTime @default(now()) // Date de création
+  updatedAt   DateTime @updatedAt // Date de mise à jour
+
+  // Relation avec le type de jeu
+  gameType GameType @relation(fields: [gameTypeId], references: [id])
+
+  // Relation avec les inscriptions de jeux
+  registrations GameRegistration[]
+
+  // Relation avec les résultats du jeu
+  results GameResult[]
+}
+
+model GameRegistration {
+  id        String   @id @default(uuid())
+  userId    String
+  gameId    String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+  game Game @relation(fields: [gameId], references: [id])
+
+  @@unique([userId, gameId])
+}
+
+model GameResult {
+  id        String   @id @default(uuid())
+  userId    String
+  gameId    String
+  score     Int
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+  game Game @relation(fields: [gameId], references: [id])
+}
