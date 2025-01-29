@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import session from "express-session";
 import authRoutes from "./routes/authRoutes";
+import gameRouter from "./routes/gameRoutes";
 
 dotenv.config();
 
@@ -14,7 +15,7 @@ const PORT: number = parseInt(process.env.PORT as string, 10);
 const app = express();
 
 app.use(cors({
-  origin: 'http://localhost:5173', // Frontend qui fait les requêtes
+  origin: 'http://localhost:5173', 
   credentials: true, 
 }));
 
@@ -32,8 +33,9 @@ app.use(session({
 }));
 
 
-// Routes d'authentification
 app.use("/auth", authRoutes);
+
+app.use("/game", gameRouter);
 
 app.listen(PORT, () => {
   console.log(`Listening on port ${PORT}`);

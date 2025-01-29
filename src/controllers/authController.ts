@@ -2,26 +2,11 @@ import { Request, Response } from 'express';
 import { prisma } from "../../lib/prisma";
 import axios from 'axios';
 import config from '../../config.json';
+import { DiscordUserInfo } from '../types/discordUserInfo.type';
 
-// Définition des types pour l'utilisateur Discord
-type DiscordUserInfo = {
-  id: string;
-  username: string;
-  discriminator: string;
-  avatar: string | null;
-  global_name: string | null;
-  accent_color: number;
-  banner_color: string | null;
-  locale: string;
-  mfa_enabled: boolean;
-  premium_type: number;
-  public_flags: number;
-  flags: number;
-};
 
-let currentUser: DiscordUserInfo | null = null;  // Informations utilisateur Discord stockées temporairement
+let currentUser: DiscordUserInfo | null = null;  
 
-// Gérer l'obtention des informations utilisateur
 export const getUserInfo = (req: Request, res: Response): void => {
   if (currentUser) {
     console.log("Informations utilisateur trouvées :", currentUser);
@@ -32,14 +17,12 @@ export const getUserInfo = (req: Request, res: Response): void => {
   }
 };
 
-// Rediriger l'utilisateur vers Discord pour l'authentification
 export const redirectToDiscord = (req: Request, res: Response): void => {
   const discordAuthUrl = `https://discord.com/oauth2/authorize?client_id=${config.clientId}&redirect_uri=${encodeURIComponent(config.redirectUri)}&response_type=code&scope=identify`;
   console.log("Redirection vers Discord avec l'URL :", discordAuthUrl);
   res.redirect(discordAuthUrl);
 };
 
-// Gérer le callback de Discord après l'autorisation de l'utilisateur
 export const handleCallback = async (req: Request, res: Response): Promise<void> => {
   const code = req.query.code as string;
 
@@ -52,7 +35,6 @@ export const handleCallback = async (req: Request, res: Response): Promise<void>
   console.log("Code d'autorisation reçu :", code);
 
   try {
-    // Échange du code contre un token
     const tokenResponse = await axios.post(
       'https://discord.com/api/oauth2/token',
       new URLSearchParams({
@@ -71,7 +53,6 @@ export const handleCallback = async (req: Request, res: Response): Promise<void>
 
     const { access_token, token_type } = tokenResponse.data;
 
-    // Récupérer les informations utilisateur avec le token
     const userResponse = await axios.get('https://discord.com/api/users/@me', {
       headers: {
         Authorization: `${token_type} ${access_token}`,
@@ -81,9 +62,8 @@ export const handleCallback = async (req: Request, res: Response): Promise<void>
     const userInfo: DiscordUserInfo = userResponse.data;
     console.log("Informations utilisateur récupérées :", userInfo);
 
-    currentUser = userInfo; // Stockage temporaire, à remplacer par une session
+    currentUser = userInfo; 
 
-    // Vérifier si l'utilisateur existe déjà dans la base de données
     let user = await prisma.user.findUnique({
       where: {
         discordId: userInfo.id,
@@ -91,11 +71,9 @@ export const handleCallback = async (req: Request, res: Response): Promise<void>
     });
 
     if (!user) {
-      // Si l'utilisateur n'existe pas encore, on ne le crée pas tout de suite
-      // On redirige l'utilisateur pour qu'il complète son profil
+
       res.redirect('http://localhost:5173/complete-profile');
     } else {
-      // Si l'utilisateur existe déjà, on le redirige vers l'accueil
       res.redirect('http://localhost:5173');
     }
   } catch (error) {
@@ -104,16 +82,14 @@ export const handleCallback = async (req: Request, res: Response): Promise<void>
   }
 };
 
-// Mise à jour du profil utilisateur (enregistrer le prénom et nom après soumission)
 export const updateProfile = async (req: Request, res: Response): Promise<void> => {
-  const { firstName, lastName } = req.body;
+  const { firstName, lastName, email } = req.body;
 
-  if (!firstName || !lastName) {
-     res.status(400).send('Prénom et nom sont requis');
+  if (!firstName || !lastName || !email) {
+     res.status(400).send('Prénom, nom et email sont requis');
   }
 
   try {
-    // Créer un nouvel utilisateur dans la base de données avec les informations Discord et les informations personnelles
     const updatedUser = await prisma.user.create({
       data: {
         discordId: currentUser?.id!,
@@ -130,12 +106,12 @@ export const updateProfile = async (req: Request, res: Response): Promise<void> 
         flags: currentUser?.flags!,
         firstName,   
         lastName,
+        email
       },
     });
 
     console.log("Profil utilisateur créé ou mis à jour :", updatedUser);
 
-    // Réponse avec les informations utilisateur mises à jour
     res.json(updatedUser);
   } catch (error) {
     console.error('Erreur lors de la mise à jour du profil :', error);

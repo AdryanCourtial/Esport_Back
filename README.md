@@ -9,6 +9,10 @@
 npm install @types/cors --save-dev
 npm install dotenv
 npm install nodemon --save-dev
+npm install swagger-ui-express
+npm install swagger-express-ts --save
+npm install swagger-jsdoc swagger-ui-express
+npm i express-jsdoc-swagger
 
 ```
 

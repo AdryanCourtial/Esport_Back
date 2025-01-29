@@ -8,11 +8,11 @@ datasource db {
 }
 
 model User {
-  id            String   @id @default(uuid()) // ID unique de l'utilisateur
-  discordId     String   @unique // ID Discord unique
+  id            String   @id @default(uuid())
+  discordId     String   @unique
   username      String
   discriminator String
-  avatar        String? // L'avatar est optionnel
+  avatar        String?
   globalName    String?
   accentColor   Int?
   bannerColor   String?
@@ -25,45 +25,40 @@ model User {
   updatedAt     DateTime @updatedAt
   lastName      String
   firstName     String
+  email         String   @unique
 
-  // Relation avec les jeux
   gameRegistrations GameRegistration[]
   gameResults       GameResult[]
 
-  // Relation avec la filière (secteur)
   sector   Sector? @relation(fields: [sectorId], references: [id])
-  sectorId String? // Référence à la filière (secteur)
+  sectorId String?
 }
 
 model Sector {
-  id   String @id @default(uuid()) // ID unique du secteur
-  Name String // Nom du secteur (filière, comme "Informatique", "Architecture")
+  id   String @id @default(uuid())
+  Name String
 
-  // Relation avec les utilisateurs
-  users User[] // Plusieurs utilisateurs peuvent être dans ce secteur
+  users User[]
 }
 
 model GameType {
-  id    String @id @default(uuid()) // ID unique pour le type de jeu
-  name  String // Nom du type de jeu (ex: LOCAL, MULTI)
-  games Game[] // Relation avec les jeux
+  id    String @id @default(uuid())
+  name  String
+  games Game[]
 }
 
 model Game {
-  id          String   @id @default(uuid()) // ID unique du jeu
-  name        String // Nom du jeu
-  description String? // Description optionnelle du jeu
-  gameTypeId  String // Clé étrangère pour le type de jeu
-  createdAt   DateTime @default(now()) // Date de création
-  updatedAt   DateTime @updatedAt // Date de mise à jour
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  gameTypeId  String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  // Relation avec le type de jeu
   gameType GameType @relation(fields: [gameTypeId], references: [id])
 
-  // Relation avec les inscriptions de jeux
   registrations GameRegistration[]
 
-  // Relation avec les résultats du jeu
   results GameResult[]
 }
 
