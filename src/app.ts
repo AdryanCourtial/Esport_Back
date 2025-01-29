@@ -4,6 +4,8 @@ import cors from "cors";
 import session from "express-session";
 import authRoutes from "./routes/authRoutes";
 import gameRouter from "./routes/gameRoutes";
+import { sessionUserType } from "./types/sessionUser.type";
+import { DiscordUserInfo } from "./types/discordUserInfo.type";
 
 dotenv.config();
 
@@ -19,17 +21,21 @@ app.use(cors({
   credentials: true, 
 }));
 
+
+
+declare module "express-session" {
+  interface SessionData {
+    user: sessionUserType;
+  }
+}
+
 app.use(express.json());
 
 app.use(session({
   secret: 'MonSecretMdp', 
   resave: false,
   saveUninitialized: false,
-  cookie: {
-    secure: false, 
-    httpOnly: true,
-    maxAge: 1000 * 60 * 60,
-  }
+  cookie: { secure: false, httpOnly: true, maxAge: 3600000 },
 }));
 
 

@@ -11,4 +11,7 @@ export type DiscordUserInfo = {
   premium_type: number;
   public_flags: number;
   flags: number;
+  firstName?: string; 
+  lastName?: string;
+  email?: string;
 };

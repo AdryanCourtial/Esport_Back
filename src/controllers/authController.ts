@@ -32,8 +32,6 @@ export const handleCallback = async (req: Request, res: Response): Promise<void>
     return;
   }
 
-  console.log("Code d'autorisation reçu :", code);
-
   try {
     const tokenResponse = await axios.post(
       'https://discord.com/api/oauth2/token',
@@ -70,11 +68,18 @@ export const handleCallback = async (req: Request, res: Response): Promise<void>
       },
     });
 
-    if (!user) {
 
-      res.redirect('http://localhost:5173/complete-profile');
+    if (user) {
+      console.log("ID de l'utilisateur dans la base de données : ", user.id);
+      
+      req.session.user = {
+        id: user.id,  
+        username: user.username,
+      };
+
+      res.redirect('http://localhost:5173'); 
     } else {
-      res.redirect('http://localhost:5173');
+      res.redirect('http://localhost:5173/complete-profile');
     }
   } catch (error) {
     console.error('Erreur lors de la récupération du token Discord :', error);
@@ -86,10 +91,12 @@ export const updateProfile = async (req: Request, res: Response): Promise<void> 
   const { firstName, lastName, email } = req.body;
 
   if (!firstName || !lastName || !email) {
-     res.status(400).send('Prénom, nom et email sont requis');
+    res.status(400).send('Prénom, nom et email sont requis');
+    return;
   }
 
   try {
+    // Utilisation des données stockées dans la session
     const updatedUser = await prisma.user.create({
       data: {
         discordId: currentUser?.id!,
@@ -110,11 +117,31 @@ export const updateProfile = async (req: Request, res: Response): Promise<void> 
       },
     });
 
-    console.log("Profil utilisateur créé ou mis à jour :", updatedUser);
+    req.session.user = {
+      id: updatedUser.id, 
+      username: updatedUser.username,
+    };
+    console.log('je suis id du user', req.session.user?.id, req.session.user?.username);
 
+
+    console.log("Profil utilisateur créé ou mis à jour :", updatedUser);
     res.json(updatedUser);
   } catch (error) {
     console.error('Erreur lors de la mise à jour du profil :', error);
     res.status(500).send('Erreur lors de la mise à jour du profil');
   }
+};
+
+
+export const logout = (req: Request, res: Response): void => {
+  req.session.destroy((err) => {
+    if (err) {
+      console.error("Erreur lors de la déconnexion :", err);
+      return res.status(500).send("Erreur lors de la déconnexion");
+    }
+    
+    res.clearCookie('connect.sid'); 
+    
+    res.status(200).send('Déconnecté avec succès');
+  });
 };

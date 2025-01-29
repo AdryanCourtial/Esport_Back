@@ -1,6 +1,6 @@
 import { Router } from 'express';
 
-import { redirectToDiscord, handleCallback, getUserInfo, updateProfile } from '../controllers/authController';
+import { redirectToDiscord, handleCallback, getUserInfo, updateProfile, logout } from '../controllers/authController';
 import { createGame } from '../controllers/gameController';
 
 
@@ -18,16 +18,7 @@ router.post('/update-profile', updateProfile);
 router.post('/game/createGame', createGame)
 
 
-router.post('/logout', (req, res) => {
-  req.session.destroy((err) => {
-    if (err) {
-      console.error("Erreur lors de la déconnexion :", err);
-      return res.status(500).send("Erreur lors de la déconnexion");
-    }
-    res.clearCookie('connect.sid'); 
-    res.send("Déconnecté avec succès");
-  });
-});
+router.post('/logout', logout);
 
 
 
