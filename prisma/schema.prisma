@@ -27,11 +27,21 @@ model User {
   firstName     String
   email         String   @unique
 
+  role   Role   @relation(fields: [roleId], references: [id])
+  roleId String
+
   gameRegistrations GameRegistration[]
   gameResults       GameResult[]
 
   sector   Sector? @relation(fields: [sectorId], references: [id])
   sectorId String?
+}
+
+model Role {
+  id   String @id @default(uuid())
+  role String
+
+  users User[]
 }
 
 model Sector {

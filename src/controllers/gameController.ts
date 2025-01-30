@@ -1,9 +1,12 @@
 import { Request, Response } from "express";
 import { prisma } from "../../lib/prisma";  
 import { GameTypeEnum } from "../types/TypeGame.enum";
+import { isAdmin } from "../middlewares/isAdminMiddleware";
 
 export const createGame = async (req: Request, res: Response): Promise<void> => {
   const { name, description, gameTypeName  } = req.body;
+
+  console.log(name, description, gameTypeName)
 
   if (!name || !gameTypeName ) {
     res.status(400).send('Nom du jeu et ID du type de jeu sont requis');
@@ -48,7 +51,19 @@ export const createGame = async (req: Request, res: Response): Promise<void> => 
 export const getGame = async (req: Request, res: Response): Promise<void> => {
   
   try {
-    const game = await prisma.game.findMany()
+    const game = await prisma.game.findMany({
+      
+        select: {
+        name: true,
+        description: true,
+        gameType: {
+          select: {
+            name:true
+          }
+        }
+        },
+    })
+    
     res.status(200).json(game);
 
   } catch (error) {

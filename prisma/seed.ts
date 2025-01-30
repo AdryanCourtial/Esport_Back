@@ -7,6 +7,12 @@ async function main() {
       { name: "MULTIPLAYER" },
     ],
   });
+  await prisma.role.createMany({
+    data: [
+      { role: "ADMIN" },
+      { role: "USER"}
+    ],
+  });
 
   console.log("Types de jeu ajoutés avec succès !");
 }

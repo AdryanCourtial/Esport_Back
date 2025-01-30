@@ -3,14 +3,36 @@ import { prisma } from "../../lib/prisma";
 import axios from 'axios';
 import config from '../../config.json';
 import { DiscordUserInfo } from '../types/discordUserInfo.type';
+import { RoleUserEnum } from '../types/RoleUser.enum';
 
 
 let currentUser: DiscordUserInfo | null = null;  
 
-export const getUserInfo = (req: Request, res: Response): void => {
-  if (currentUser) {
-    console.log("Informations utilisateur trouvées :", currentUser);
-    res.json(currentUser);
+export const getUserInfo = async (req: Request, res: Response): Promise<void> => {
+  if (req.session.user) {
+     const userId = req.session.user.id;
+    
+      const user = await prisma.user.findUnique({
+        where: {
+          id: userId,  
+        },
+        select: {
+          email: true,        
+          username: true,    
+          lastName: true,      
+          firstName: true, 
+          avatar: true,
+          discordId: true,
+          role: {              
+            select: {
+              role: true,      
+            },
+          },
+        },
+      });
+
+    res.json(user);
+
   } else {
     console.log("Utilisateur non connecté");
     res.status(401).send('Utilisateur non connecté');
@@ -66,16 +88,21 @@ export const handleCallback = async (req: Request, res: Response): Promise<void>
       where: {
         discordId: userInfo.id,
       },
+      include: {
+        role: true, 
+      },
     });
-
 
     if (user) {
       console.log("ID de l'utilisateur dans la base de données : ", user.id);
       
       req.session.user = {
-        id: user.id,  
+        id: user.id,
         username: user.username,
+        role: user.role?.role, 
       };
+
+      console.log("je suis le contenue de la session", req.session.user.role)
 
       res.redirect('http://localhost:5173'); 
     } else {
@@ -95,6 +122,16 @@ export const updateProfile = async (req: Request, res: Response): Promise<void> 
     return;
   }
 
+  const roleUser = RoleUserEnum.ADMIN;  
+
+  const role = await prisma.role.findFirst({
+    where: {
+      role: roleUser.toString(), 
+    },
+  });
+
+
+
   try {
     // Utilisation des données stockées dans la session
     const updatedUser = await prisma.user.create({
@@ -113,13 +150,19 @@ export const updateProfile = async (req: Request, res: Response): Promise<void> 
         flags: currentUser?.flags!,
         firstName,   
         lastName,
-        email
+        email,
+        role: {
+          connect: {
+            id: role?.id,  
+          },
+        },
       },
     });
 
     req.session.user = {
       id: updatedUser.id, 
       username: updatedUser.username,
+      role: role?.role
     };
     console.log('je suis id du user', req.session.user?.id, req.session.user?.username);
 

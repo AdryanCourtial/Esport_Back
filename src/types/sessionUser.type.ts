@@ -1,6 +1,7 @@
 export type sessionUserType = {
     id: string;
     username: string;
+    role: string | undefined
     // discriminator: string;
     // avatar: string | null;
     // global_name: string | null;
