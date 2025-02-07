@@ -30,8 +30,8 @@ model User {
   role   Role   @relation(fields: [roleId], references: [id])
   roleId String
 
-  gameRegistrations GameRegistration[]
-  gameResults       GameResult[]
+  TournamentRegistrations TournamentRegistration[]
+  TournamentResults       TournamentResult[]
 
   sector   Sector? @relation(fields: [sectorId], references: [id])
   sectorId String?
@@ -51,46 +51,52 @@ model Sector {
   users User[]
 }
 
-model GameType {
-  id    String @id @default(uuid())
-  name  String
-  games Game[]
-}
-
-model Game {
-  id          String   @id @default(uuid())
+model TournamentType {
+  id          String       @id @default(uuid())
   name        String
-  description String?
-  gameTypeId  String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  gameType GameType @relation(fields: [gameTypeId], references: [id])
-
-  registrations GameRegistration[]
-
-  results GameResult[]
+  tournaments Tournament[]
 }
 
-model GameRegistration {
-  id        String   @id @default(uuid())
-  userId    String
-  gameId    String
+model Tournament {
+  id               String  @id @default(uuid())
+  name             String
+  description      String?
+  tournamentTypeId String
+
+  registrationStart DateTime?
+  registrationEnd   DateTime ?
+
+  tournamentDate DateTime ?
+
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id])
-  game Game @relation(fields: [gameId], references: [id])
+  tournamentType TournamentType @relation(fields: [tournamentTypeId], references: [id])
 
-  @@unique([userId, gameId])
+  registrations TournamentRegistration[]
+
+  results TournamentResult[]
 }
 
-model GameResult {
-  id        String   @id @default(uuid())
-  userId    String
-  gameId    String
-  score     Int
-  createdAt DateTime @default(now())
+model TournamentRegistration {
+  id           String   @id @default(uuid())
+  userId       String
+  TournamentId String
+  createdAt    DateTime @default(now())
 
-  user User @relation(fields: [userId], references: [id])
-  game Game @relation(fields: [gameId], references: [id])
+  user       User       @relation(fields: [userId], references: [id])
+  Tournament Tournament @relation(fields: [TournamentId], references: [id])
+
+  @@unique([userId, TournamentId])
+}
+
+model TournamentResult {
+  id           String   @id @default(uuid())
+  userId       String
+  tournamentId String
+  score        Int
+  createdAt    DateTime @default(now())
+
+  user       User       @relation(fields: [userId], references: [id])
+  tournament Tournament @relation(fields: [tournamentId], references: [id])
 }

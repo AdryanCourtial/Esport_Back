@@ -115,13 +115,14 @@ export const handleCallback = async (req: Request, res: Response): Promise<void>
 };
 
 export const updateProfile = async (req: Request, res: Response): Promise<void> => {
-  const { firstName, lastName, email } = req.body;
+  const { firstName, lastName, email, sector } = req.body;
 
-  if (!firstName || !lastName || !email) {
-    res.status(400).send('Prénom, nom et email sont requis');
+  if (!firstName || !lastName || !email || !sector) {
+    res.status(400).send('Prénom, nom, secteur et email sont requis');
     return;
   }
 
+  
   const roleUser = RoleUserEnum.ADMIN;  
 
   const role = await prisma.role.findFirst({
@@ -130,10 +131,15 @@ export const updateProfile = async (req: Request, res: Response): Promise<void> 
     },
   });
 
+  const sector_user = await prisma.sector.findFirst({
+    where: {
+      Name: sector
+    }
+  })
 
 
   try {
-    // Utilisation des données stockées dans la session
+
     const updatedUser = await prisma.user.create({
       data: {
         discordId: currentUser?.id!,
@@ -156,6 +162,11 @@ export const updateProfile = async (req: Request, res: Response): Promise<void> 
             id: role?.id,  
           },
         },
+        sector: {
+          connect: {
+            id: sector_user?.id
+          }
+        }
       },
     });
 

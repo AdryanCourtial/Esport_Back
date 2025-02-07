@@ -3,9 +3,10 @@ import express from "express";
 import cors from "cors";
 import session from "express-session";
 import authRoutes from "./routes/authRoutes";
-import gameRouter from "./routes/gameRoutes";
+import gameRouter from "./routes/tournamentRoutes";
 import { sessionUserType } from "./types/sessionUser.type";
 import { DiscordUserInfo } from "./types/discordUserInfo.type";
+import tournamentRouter from "./routes/tournamentRoutes";
 
 dotenv.config();
 
@@ -41,7 +42,7 @@ app.use(session({
 
 app.use("/auth", authRoutes);
 
-app.use("/game", gameRouter);
+app.use("/tournament", tournamentRouter);
 
 app.listen(PORT, () => {
   console.log(`Listening on port ${PORT}`);

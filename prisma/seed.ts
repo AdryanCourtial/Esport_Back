@@ -1,7 +1,7 @@
 import { prisma } from "../lib/prisma";  
 
 async function main() {
-  await prisma.gameType.createMany({
+  await prisma.tournamentType.createMany({
     data: [
       { name: "SOLO" },
       { name: "MULTIPLAYER" },
@@ -11,6 +11,22 @@ async function main() {
     data: [
       { role: "ADMIN" },
       { role: "USER"}
+    ],
+  });
+ await prisma.sector.createMany({
+    data: [
+      { Name: "3D, Animation & Jeux vidéo" },
+      { Name: "Architecture d'intérieur" },
+      { Name: "Audiovisuel" },
+      { Name: "Bâtiment Numérique" },
+      { Name: "Création & Digital Design" },
+      { Name: "Cybersécurité" },
+      { Name: "Illustration" },
+      { Name: "Informatique" },
+      { Name: "Intelligence Artificielle & Data" },
+      { Name: "Marketing & Communication Digitale" },
+      { Name: "Son & Musique" },
+      { Name: "Tech & Business" },
     ],
   });
 
