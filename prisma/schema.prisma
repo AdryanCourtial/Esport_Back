@@ -64,14 +64,17 @@ model Tournament {
   tournamentTypeId String
 
   registrationStart DateTime?
-  registrationEnd   DateTime ?
+  registrationEnd   DateTime?
 
-  tournamentDate DateTime ?
+  tournamentDate DateTime
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   tournamentType TournamentType @relation(fields: [tournamentTypeId], references: [id])
+
+  gameId String
+  game   Game   @relation(fields: [gameId], references: [id])
 
   registrations TournamentRegistration[]
 
@@ -99,4 +102,11 @@ model TournamentResult {
 
   user       User       @relation(fields: [userId], references: [id])
   tournament Tournament @relation(fields: [tournamentId], references: [id])
+}
+
+model Game {
+  id         String       @id @default(uuid())
+  name       String
+  image_url  String
+  Tournament Tournament[]
 }

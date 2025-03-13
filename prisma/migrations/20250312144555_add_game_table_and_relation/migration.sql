@@ -1,11 +1,17 @@
 /*
   Warnings:
 
-  - Added the required column `registrationEnd` to the `Tournament` table without a default value. This is not possible if the table is not empty.
-  - Added the required column `registrationStart` to the `Tournament` table without a default value. This is not possible if the table is not empty.
+  - Added the required column `gameId` to the `Tournament` table without a default value. This is not possible if the table is not empty.
   - Added the required column `tournamentDate` to the `Tournament` table without a default value. This is not possible if the table is not empty.
 
 */
+-- CreateTable
+CREATE TABLE "Game" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "name" TEXT NOT NULL,
+    "image_url" TEXT NOT NULL
+);
+
 -- RedefineTables
 PRAGMA defer_foreign_keys=ON;
 PRAGMA foreign_keys=OFF;
@@ -14,12 +20,14 @@ CREATE TABLE "new_Tournament" (
     "name" TEXT NOT NULL,
     "description" TEXT,
     "tournamentTypeId" TEXT NOT NULL,
-    "registrationStart" DATETIME NOT NULL,
-    "registrationEnd" DATETIME NOT NULL,
+    "registrationStart" DATETIME,
+    "registrationEnd" DATETIME,
     "tournamentDate" DATETIME NOT NULL,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL,
-    CONSTRAINT "Tournament_tournamentTypeId_fkey" FOREIGN KEY ("tournamentTypeId") REFERENCES "TournamentType" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
+    "gameId" TEXT NOT NULL,
+    CONSTRAINT "Tournament_tournamentTypeId_fkey" FOREIGN KEY ("tournamentTypeId") REFERENCES "TournamentType" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT "Tournament_gameId_fkey" FOREIGN KEY ("gameId") REFERENCES "Game" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
 INSERT INTO "new_Tournament" ("createdAt", "description", "id", "name", "tournamentTypeId", "updatedAt") SELECT "createdAt", "description", "id", "name", "tournamentTypeId", "updatedAt" FROM "Tournament";
 DROP TABLE "Tournament";

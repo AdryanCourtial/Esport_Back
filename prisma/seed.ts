@@ -15,12 +15,12 @@ async function main() {
   });
  await prisma.sector.createMany({
     data: [
-      { Name: "3D, Animation & Jeux vidéo" },
-      { Name: "Architecture d'intérieur" },
+      { Name: "3D, Animation & Jeux video" },
+      { Name: "Architecture d'interieur" },
       { Name: "Audiovisuel" },
-      { Name: "Bâtiment Numérique" },
-      { Name: "Création & Digital Design" },
-      { Name: "Cybersécurité" },
+      { Name: "Batiment Numerique" },
+      { Name: "Creation & Digital Design" },
+      { Name: "Cybersécurite" },
       { Name: "Illustration" },
       { Name: "Informatique" },
       { Name: "Intelligence Artificielle & Data" },
@@ -28,7 +28,31 @@ async function main() {
       { Name: "Son & Musique" },
       { Name: "Tech & Business" },
     ],
-  });
+ });
+await prisma.game.createMany({
+  data: [
+    {
+      name: 'Rocket League',
+      image_url: 'https://mediatheques.niortagglo.fr/sites/default/files/2023-06/Rocket%20league.jpg',
+  },
+    {
+      name: 'Valorant',
+      image_url: 'https://gamecover.fr/wp-content/uploads/Valorant-mise-en-avant.jpeg',
+    },
+    {
+      name: 'League of Legends',
+      image_url: 'https://www.pedagojeux.fr/wp-content/uploads/2019/11/1280x720_LoL.jpg',
+    },
+    {
+      name: 'Smash Bros Ultimate',
+      image_url: 'https://www.nintendo.com/eu/media/images/10_share_images/games_15/nintendo_switch_4/H2x1_NSwitch_SuperSmashBrosUltimate_02.jpg',
+    },
+    {
+      name: 'Mario Kart',
+      image_url: 'https://static.fnac-static.com/multimedia/Images/FD/Comete/87087/CCP_IMG_1200x800/1101788.jpg',
+    }
+  ],
+});
 
   console.log("Types de jeu ajoutés avec succès !");
 }

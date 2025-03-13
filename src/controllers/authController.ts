@@ -123,7 +123,7 @@ export const updateProfile = async (req: Request, res: Response): Promise<void> 
   }
 
   
-  const roleUser = RoleUserEnum.ADMIN;  
+  const roleUser = RoleUserEnum.USER;  
 
   const role = await prisma.role.findFirst({
     where: {
