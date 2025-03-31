@@ -199,3 +199,44 @@ export const logout = (req: Request, res: Response): void => {
     res.status(200).send('Déconnecté avec succès');
   });
 };
+
+export const reconnectUser = async (req: Request, res: Response): Promise<void> => {
+  if (req.session.user) {
+    // Si l'utilisateur est déjà connecté, on peut utiliser la session pour récupérer son ID et ses informations
+    const userId = req.session.user.id;
+
+    try {
+      // Récupère l'utilisateur depuis la base de données avec l'ID de la session
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          email: true,
+          username: true,
+          lastName: true,
+          firstName: true,
+          avatar: true,
+          discordId: true,
+          role: {
+            select: {
+              role: true,
+            },
+          },
+        },
+      });
+
+      if (user) {
+        // L'utilisateur est trouvé dans la base de données, donc on peut répondre avec ses informations
+        res.json(user);
+      } else {
+        // Si l'utilisateur n'est pas trouvé dans la base de données
+        res.status(404).send('Utilisateur non trouvé dans la base de données');
+      }
+    } catch (error) {
+      console.error('Erreur lors de la récupération de l\'utilisateur :', error);
+      res.status(500).send('Erreur lors de la récupération de l\'utilisateur');
+    }
+  } else {
+    // Si l'utilisateur n'est pas connecté, on retourne une erreur
+    res.status(401).send('Utilisateur non connecté');
+  }
+};

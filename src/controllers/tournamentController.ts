@@ -5,9 +5,9 @@ import { TournamentTypeEnum } from "../types/TypeTournament.enum";
 import { console } from "inspector";
 
 export const createTournament = async (req: Request, res: Response): Promise<void> => {
-  const { name, description, TournamentTypeName, tournamentDate, Game} = req.body;
+  const { name, description, TournamentTypeName, tournamentDate, Game, registrationStart, registrationEnd } = req.body;
 
-  console.log("je suis les infos renvoyé par la création de tournois",name, description, TournamentTypeName, tournamentDate, Game)
+  console.log("je suis les infos renvoyé par la création de tournois", name, description, TournamentTypeName, tournamentDate, Game, registrationStart, registrationEnd)
 
   if (!name || !TournamentTypeName ) {
     res.status(400).send('Nom du jeu et ID du type de jeu sont requis');
@@ -49,6 +49,8 @@ export const createTournament = async (req: Request, res: Response): Promise<voi
         tournamentTypeId: TournamentType.id,
         gameId: GameChoise?.id,
         tournamentDate: new Date(tournamentDate),
+        registrationStart: new Date(registrationStart),
+        registrationEnd: new Date(registrationEnd),
 
       },
     });
@@ -70,6 +72,9 @@ export const getTournament = async (req: Request, res: Response): Promise<void> 
           id: true,
         name: true,
         description: true,
+        registrationStart: true,
+        registrationEnd: true,
+        tournamentDate: true,
         tournamentType: {
           select: {
             name:true
@@ -131,10 +136,9 @@ export const addResultToTournament = async (req: Request, res: Response): Promis
 };
 
 
-export const adminTournament = async (req: Request, res: Response): Promise<void> => {
+export const seeDetailTournament = async (req: Request, res: Response): Promise<void> => {
   try {
       const { id } = req.params;
-    console.log("Je suis l'ID du tournoi", id);
 
     const Tournament = await prisma.tournament.findUnique({
       where: {
@@ -149,6 +153,13 @@ export const adminTournament = async (req: Request, res: Response): Promise<void
             name: true,
           },
         },
+        game: {
+          select: {
+            name: true,
+            image_url: true,
+          },
+        },
+        tournamentDate: true,
       },
     });
 
@@ -180,11 +191,16 @@ export const getAdminTournament = async (req: Request, res: Response): Promise<v
           select: {
             name:true
           }
-        }
+        },
+        game: {
+          select: {
+            name: true,
+            image_url: true,
+          },
+        },
         },
     })
 
-    console.log("Je suis les tournois", Tournament)
 
     res.status(200).json(Tournament);
 

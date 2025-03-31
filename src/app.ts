@@ -36,7 +36,7 @@ app.use(session({
   secret: 'MonSecretMdp', 
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: false, httpOnly: true, maxAge: 3600000 },
+  cookie: { secure: false, httpOnly: true, maxAge: 5184000000 },
 }));
 
 

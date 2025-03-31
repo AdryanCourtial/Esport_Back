@@ -35,6 +35,7 @@ model User {
 
   sector   Sector? @relation(fields: [sectorId], references: [id])
   sectorId String?
+  Team     Team[]
 }
 
 model Role {
@@ -63,8 +64,8 @@ model Tournament {
   description      String?
   tournamentTypeId String
 
-  registrationStart DateTime?
-  registrationEnd   DateTime?
+  registrationStart DateTime
+  registrationEnd   DateTime
 
   tournamentDate DateTime
 
@@ -79,6 +80,21 @@ model Tournament {
   registrations TournamentRegistration[]
 
   results TournamentResult[]
+  Team    Team?              @relation(fields: [teamId], references: [id])
+  teamId  String?
+}
+
+model Team {
+  id         String       @id @default(uuid())
+  name       String
+  image_url  String?
+  players    String
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  userId     String
+  tournament Tournament[]
+
+  user User @relation(fields: [userId], references: [id])
 }
 
 model TournamentRegistration {

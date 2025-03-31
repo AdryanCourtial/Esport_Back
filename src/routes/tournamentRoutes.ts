@@ -1,6 +1,6 @@
 import { Router } from 'express';
 
-import { addResultToTournament, adminTournament, createTournament, getAdminTournament, getTournament } from '../controllers/tournamentController';
+import { addResultToTournament  , createTournament, getAdminTournament, getTournament, seeDetailTournament } from '../controllers/tournamentController';
 import { checkRegistration, registerForTournament, unregisterForGame } from '../controllers/tournamentRegistration';
 import { isAdmin } from '../middlewares/isAdminMiddleware';
 
@@ -11,7 +11,7 @@ tournamentRouter.post('/createTournament', isAdmin, createTournament);
 
 tournamentRouter.get('/adminTournament', isAdmin, getAdminTournament);
 
-tournamentRouter.get('/:id', isAdmin, adminTournament);
+tournamentRouter.get('/:id', seeDetailTournament); 
 
 tournamentRouter.post('/:id/addResult', isAdmin, addResultToTournament);
 
