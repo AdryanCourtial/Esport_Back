@@ -5,9 +5,7 @@ import { TournamentTypeEnum } from "../types/TypeTournament.enum";
 import { console } from "inspector";
 
 export const createTournament = async (req: Request, res: Response): Promise<void> => {
-  const { name, description, TournamentTypeName, tournamentDate, Game, registrationStart, registrationEnd } = req.body;
-
-  console.log("je suis les infos renvoyé par la création de tournois", name, description, TournamentTypeName, tournamentDate, Game, registrationStart, registrationEnd)
+  const { name, description, TournamentTypeName, tournamentDate, Game, registrationStart, registrationEnd, condition_participation } = req.body;
 
   if (!name || !TournamentTypeName ) {
     res.status(400).send('Nom du jeu et ID du type de jeu sont requis');
@@ -45,7 +43,8 @@ export const createTournament = async (req: Request, res: Response): Promise<voi
     const newTournament = await prisma.tournament.create({
       data: {
         name,
-        description,  
+        description,
+        condition_participation,
         tournamentTypeId: TournamentType.id,
         gameId: GameChoise?.id,
         tournamentDate: new Date(tournamentDate),
@@ -160,6 +159,8 @@ export const seeDetailTournament = async (req: Request, res: Response): Promise<
           },
         },
         tournamentDate: true,
+        registrationStart: true,
+        registrationEnd:true
       },
     });
 

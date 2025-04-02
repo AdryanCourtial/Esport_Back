@@ -202,11 +202,9 @@ export const logout = (req: Request, res: Response): void => {
 
 export const reconnectUser = async (req: Request, res: Response): Promise<void> => {
   if (req.session.user) {
-    // Si l'utilisateur est déjà connecté, on peut utiliser la session pour récupérer son ID et ses informations
     const userId = req.session.user.id;
 
     try {
-      // Récupère l'utilisateur depuis la base de données avec l'ID de la session
       const user = await prisma.user.findUnique({
         where: { id: userId },
         select: {
@@ -225,10 +223,8 @@ export const reconnectUser = async (req: Request, res: Response): Promise<void> 
       });
 
       if (user) {
-        // L'utilisateur est trouvé dans la base de données, donc on peut répondre avec ses informations
         res.json(user);
       } else {
-        // Si l'utilisateur n'est pas trouvé dans la base de données
         res.status(404).send('Utilisateur non trouvé dans la base de données');
       }
     } catch (error) {

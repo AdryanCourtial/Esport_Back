@@ -59,10 +59,11 @@ model TournamentType {
 }
 
 model Tournament {
-  id               String  @id @default(uuid())
-  name             String
-  description      String?
-  tournamentTypeId String
+  id                      String  @id @default(uuid())
+  name                    String
+  description             String?
+  condition_participation String?
+  tournamentTypeId        String
 
   registrationStart DateTime
   registrationEnd   DateTime
