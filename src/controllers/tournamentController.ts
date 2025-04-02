@@ -147,6 +147,7 @@ export const seeDetailTournament = async (req: Request, res: Response): Promise<
         id: true,
         name: true,
         description: true,
+        condition_participation:true,
         tournamentType: {
           select: {
             name: true,
