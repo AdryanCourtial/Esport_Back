@@ -104,9 +104,9 @@ export const handleCallback = async (req: Request, res: Response): Promise<void>
 
       console.log("je suis le contenue de la session", req.session.user.role)
 
-      res.redirect(process.env.FRONT_URL + '/home'); 
+      res.redirect('http://localhost:5173/'); 
     } else {
-      res.redirect(process.env.FRONT_URL + '/completed-profil');
+      res.redirect('http://localhost:5173/home');
     }
   } catch (error) {
     console.error('Erreur lors de la récupération du token Discord :', error);
@@ -234,21 +234,5 @@ export const reconnectUser = async (req: Request, res: Response): Promise<void> 
   } else {
     // Si l'utilisateur n'est pas connecté, on retourne une erreur
     res.status(401).send('Utilisateur non connecté');
-  }
-};
-
-export const getSectors = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const sectors = await prisma.sector.findMany({
-      select: {
-        id: true,
-        Name: true,
-      },
-    });
-
-    res.json(sectors);
-  } catch (error) {
-    console.error(error);
-    res.status(500).send('Aucun secteur récupéré');
   }
 };

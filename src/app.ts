@@ -3,9 +3,7 @@ import express from "express";
 import cors from "cors";
 import session from "express-session";
 import authRoutes from "./routes/authRoutes";
-import gameRouter from "./routes/tournamentRoutes";
 import { sessionUserType } from "./types/sessionUser.type";
-import { DiscordUserInfo } from "./types/discordUserInfo.type";
 import tournamentRouter from "./routes/tournamentRoutes";
 
 dotenv.config();
@@ -18,7 +16,7 @@ const PORT: number = parseInt(process.env.PORT as string, 10);
 const app = express();
 
 app.use(cors({
-  origin: 'http://localhost:5173', 
+  origin: process.env.FRONT_URL,
   credentials: true, 
 }));
 

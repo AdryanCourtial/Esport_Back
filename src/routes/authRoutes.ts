@@ -1,6 +1,6 @@
 import { Router } from 'express';
 
-import { redirectToDiscord, handleCallback, getUserInfo, updateProfile, logout, reconnectUser } from '../controllers/authController';
+import { redirectToDiscord, handleCallback, getUserInfo, updateProfile, logout, reconnectUser, getSectors } from '../controllers/authController';
 
 
 const router = Router();
@@ -12,8 +12,9 @@ router.get('/discord/callback', handleCallback);
 
 router.get('/userinfo', getUserInfo);
 
-router.post('/update-profile', updateProfile);
+router.get('/sectors', getSectors)
 
+router.post('/update-profile', updateProfile);
 
 router.post('/logout', logout);
 
