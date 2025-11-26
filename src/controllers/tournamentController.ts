@@ -57,7 +57,7 @@ export const createTournament = async (req: Request, res: Response): Promise<voi
     console.log('Jeu créé avec succès:', newTournament);
     res.status(201).json(newTournament);  
   } catch (error) {
-    console.error('Erreur lors de la création du jeu:', error);
+    console.log('Erreur lors de la création du jeu:', error);
     res.status(500).send('Erreur lors de la création du jeu');
   }
 };

@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -36,6 +36,8 @@ model User {
   sector   Sector? @relation(fields: [sectorId], references: [id])
   sectorId String?
   Team     Team[]
+
+  @@map("users")
 }
 
 model Role {
@@ -43,6 +45,8 @@ model Role {
   role String
 
   users User[]
+
+  @@map("roles")
 }
 
 model Sector {
@@ -50,12 +54,16 @@ model Sector {
   Name String
 
   users User[]
+
+  @@map("sectors")
 }
 
 model TournamentType {
   id          String       @id @default(uuid())
   name        String
   tournaments Tournament[]
+
+  @@map("tournament_types")
 }
 
 model Tournament {
@@ -83,6 +91,8 @@ model Tournament {
   results TournamentResult[]
   Team    Team?              @relation(fields: [teamId], references: [id])
   teamId  String?
+
+  @@map("tournaments")
 }
 
 model Team {
@@ -96,6 +106,8 @@ model Team {
   tournament Tournament[]
 
   user User @relation(fields: [userId], references: [id])
+
+  @@map("teams")
 }
 
 model TournamentRegistration {
@@ -108,6 +120,7 @@ model TournamentRegistration {
   Tournament Tournament @relation(fields: [TournamentId], references: [id])
 
   @@unique([userId, TournamentId])
+  @@map("tournament_registrations")
 }
 
 model TournamentResult {
@@ -119,6 +132,8 @@ model TournamentResult {
 
   user       User       @relation(fields: [userId], references: [id])
   tournament Tournament @relation(fields: [tournamentId], references: [id])
+
+  @@map("tournament_results")
 }
 
 model Game {
@@ -126,4 +141,6 @@ model Game {
   name       String
   image_url  String
   Tournament Tournament[]
+
+  @@map("games")
 }

@@ -5,9 +5,6 @@ import config from '../../config.json';
 import { DiscordUserInfo } from '../types/discordUserInfo.type';
 import { RoleUserEnum } from '../types/RoleUser.enum';
 
-
-let currentUser: DiscordUserInfo | null = null;  
-
 export const getUserInfo = async (req: Request, res: Response): Promise<void> => {
   if (req.session.user) {
      const userId = req.session.user.id;
@@ -82,29 +79,28 @@ export const handleCallback = async (req: Request, res: Response): Promise<void>
     const userInfo: DiscordUserInfo = userResponse.data;
     console.log("Informations utilisateur récupérées :", userInfo);
 
-    currentUser = userInfo; 
+    (req.session as any).discordUser = userInfo;
 
     let user = await prisma.user.findUnique({
       where: {
         discordId: userInfo.id,
       },
       include: {
-        role: true, 
+        role: true,
       },
     });
 
     if (user) {
       console.log("ID de l'utilisateur dans la base de données : ", user.id);
-      
-      req.session.user = {
+
+      (req.session as any).user = {
         id: user.id,
         username: user.username,
-        role: user.role?.role, 
+        role: user.role?.role,
       };
 
-      console.log("je suis le contenue de la session", req.session.user.role)
 
-      res.redirect(process.env.FRONT_URL + '/home'); 
+      res.redirect(process.env.FRONT_URL + '/home');
     } else {
       res.redirect(process.env.FRONT_URL + '/completed-profil');
     }
@@ -122,69 +118,82 @@ export const updateProfile = async (req: Request, res: Response): Promise<void> 
     return;
   }
 
-  
-  const roleUser = RoleUserEnum.USER;  
+  const discordUser = (req.session as any).discordUser as DiscordUserInfo | undefined;
+
+  if (!discordUser) {
+    console.log("Pas d'utilisateur Discord dans la session (session expirée ?)");
+    res.status(401).send('Session Discord expirée ou inexistante');
+    return;
+  }
+
+  const roleUser = RoleUserEnum.USER;
 
   const role = await prisma.role.findFirst({
     where: {
-      role: roleUser.toString(), 
+      role: roleUser.toString(),
     },
   });
 
   const sector_user = await prisma.sector.findFirst({
     where: {
-      Name: sector
-    }
-  })
+      Name: sector,
+    },
+  });
 
+  if (!role) {
+    res.status(400).send("Rôle utilisateur introuvable");
+    return;
+  }
+
+  if (!sector_user) {
+    res.status(400).send("Secteur introuvable");
+    return;
+  }
 
   try {
-
     const updatedUser = await prisma.user.create({
       data: {
-        discordId: currentUser?.id!,
-        username: currentUser?.username!,
-        discriminator: currentUser?.discriminator!,
-        avatar: currentUser?.avatar,
-        globalName: currentUser?.global_name,
-        accentColor: currentUser?.accent_color,
-        bannerColor: currentUser?.banner_color,
-        locale: currentUser?.locale!,
-        mfaEnabled: currentUser?.mfa_enabled!,
-        premiumType: currentUser?.premium_type!,
-        publicFlags: currentUser?.public_flags!,
-        flags: currentUser?.flags!,
-        firstName,   
+        discordId: discordUser.id,
+        username: discordUser.username,
+        discriminator: discordUser.discriminator,
+        avatar: discordUser.avatar,
+        globalName: discordUser.global_name,
+        accentColor: discordUser.accent_color,
+        bannerColor: discordUser.banner_color,
+        locale: discordUser.locale,
+        mfaEnabled: discordUser.mfa_enabled,
+        premiumType: discordUser.premium_type,
+        publicFlags: discordUser.public_flags,
+        flags: discordUser.flags,
+        firstName,
         lastName,
         email,
         role: {
           connect: {
-            id: role?.id,  
+            id: role.id,
           },
         },
         sector: {
           connect: {
-            id: sector_user?.id
-          }
-        }
+            id: sector_user.id,
+          },
+        },
       },
     });
 
-    req.session.user = {
-      id: updatedUser.id, 
+    (req.session as any).user = {
+      id: updatedUser.id,
       username: updatedUser.username,
-      role: role?.role
+      role: role.role,
     };
-    console.log('je suis id du user', req.session.user?.id, req.session.user?.username);
 
-
-    console.log("Profil utilisateur créé ou mis à jour :", updatedUser);
     res.json(updatedUser);
   } catch (error) {
     console.error('Erreur lors de la mise à jour du profil :', error);
     res.status(500).send('Erreur lors de la mise à jour du profil');
   }
 };
+
 
 
 export const logout = (req: Request, res: Response): void => {
