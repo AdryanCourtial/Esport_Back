@@ -43,10 +43,8 @@ export const registerForTournament = async (req: Request, res: Response): Promis
 
   console.log('Utilisateur connecté:', req.session.user);
 
-  if (!userId) {
-    res.status(401).send('Utilisateur non connecté');
+  if (!userId)
     return;
-  }
 
   if (!tournamentId) {
     res.status(400).send('L\'ID du tournoi est requis');

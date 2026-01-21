@@ -15,18 +15,18 @@ async function main() {
   });
  await prisma.sector.createMany({
     data: [
-      { Name: "3D, Animation & Jeux video" },
-      { Name: "Architecture d'interieur" },
-      { Name: "Audiovisuel" },
-      { Name: "Batiment Numerique" },
-      { Name: "Creation & Digital Design" },
-      { Name: "Cybersécurite" },
-      { Name: "Illustration" },
-      { Name: "Informatique" },
-      { Name: "Intelligence Artificielle & Data" },
-      { Name: "Marketing & Communication Digitale" },
-      { Name: "Son & Musique" },
-      { Name: "Tech & Business" },
+      { name: "3D, Animation & Jeux video" },
+      { name: "Architecture d'interieur" },
+      { name: "Audiovisuel" },
+      { name: "Batiment numerique" },
+      { name: "Creation & Digital Design" },
+      { name: "Cybersécurite" },
+      { name: "Illustration" },
+      { name: "Informatique" },
+      { name: "Intelligence Artificielle & Data" },
+      { name: "Marketing & Communication Digitale" },
+      { name: "Son & Musique" },
+      { name: "Tech & Business" },
     ],
  });
 await prisma.game.createMany({
@@ -45,7 +45,7 @@ await prisma.game.createMany({
     },
     {
       name: 'Smash Bros Ultimate',
-      image_url: 'https://www.nintendo.com/eu/media/images/10_share_images/games_15/nintendo_switch_4/H2x1_NSwitch_SuperSmashBrosUltimate_02.jpg',
+      image_url: 'https://www.nintendo.com/eu/media/images/10_share_images/games_15/nintendo_switch_4/H2x1_nSwitch_SuperSmashBrosUltimate_02.jpg',
     },
     {
       name: 'Mario Kart',
