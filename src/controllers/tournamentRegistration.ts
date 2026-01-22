@@ -1,155 +1,190 @@
 import { Request, Response } from "express";
-import { prisma } from "../../lib/prisma";  
+import { prisma } from "../../lib/prisma";
 
+/////////////////////////////
+// INSCRIPTION AU TOURNOI //
+/////////////////////////////
 
-export const registerForTournamentTeam = async (req: Request, res: Response): Promise<void> => {
-  const { tournamentId, team } = req.body;
-  const userId = req.session.user?.id;
+export const registerForTournamentTeam = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  const { teamName, memberIds } = req.body;
+  const tournamentId = req.params.tournamentId;
+  const captainId = req.session.user?.id;
 
-  console.log('Utilisateur connecté:', req.session.user);
-
-  if (!userId) {
-    res.status(401).send('Utilisateur non connecté');
+  if (!captainId) {
+    res.status(401).send("Utilisateur non connecté");
     return;
   }
 
   if (!tournamentId) {
-    res.status(400).send('L\'ID du tournoi est requis');
+    res.status(400).send("ID du tournoi requis");
     return;
   }
 
   try {
     const tournament = await prisma.tournament.findUnique({
-      where: {
-          id: tournamentId
-      },
-      select: {
-        registrationEnd: true,
-        registrationStart: true,
-      }
-    })
-    
-    
-
-  } catch (error) {
-    res.status(500).send('Erreur lors de l\'inscription au tournoi');
-  }
-
-};
-
-export const registerForTournament = async (req: Request, res: Response): Promise<void> => {
-  const { tournamentId } = req.body;  
-  const userId = req.session.user?.id;  
-
-  console.log('Utilisateur connecté:', req.session.user);
-
-  if (!userId)
-    return;
-
-  if (!tournamentId) {
-    res.status(400).send('L\'ID du tournoi est requis');
-    return;
-  }
-
-  try {
-
-    const tournament = await prisma.tournament.findUnique({
-      where: {
-        id: tournamentId,
-      },
-      select: {
-        registrationEnd: true,
-        registrationStart: true,
-      },
+      where: { id: tournamentId },
+      include: { teams: { include: { members: true } } },
     });
 
-    if (tournament?.registrationEnd && new Date(tournament.registrationEnd) < new Date()) {
-      res.status(400).send('Les inscriptions pour ce tournoi sont terminées');
-      return;
-    }
-    
-    if (tournament?.registrationStart && new Date(tournament.registrationStart) > new Date()) {
-      res.status(400).send('Les inscriptions pour ce tournoi n\'ont pas encore commencé');
+    if (!tournament) {
+      res.status(404).send("Tournoi introuvable");
       return;
     }
 
-    const existingRegistration = await prisma.tournamentRegistration.findUnique({
-      where: {
-        userId_TournamentId: {
-          userId: userId,
-          TournamentId: tournamentId,
+    const now = new Date();
+    if (tournament.registrationEnd < now) {
+      res.status(400).send("Les inscriptions sont terminées");
+      return;
+    }
+    if (tournament.registrationStart > now) {
+      res.status(400).send("Les inscriptions n'ont pas encore commencé");
+      return;
+    }
+
+    // Vérifie que le capitaine n'est pas déjà inscrit
+    const isAlreadyInTournament = tournament.teams.some(
+      (team) =>
+        team.captainId === captainId ||
+        team.members.some((m) => m.userId === captainId),
+    );
+    if (isAlreadyInTournament) {
+      res.status(400).send("Vous êtes déjà inscrit à ce tournoi");
+      return;
+    }
+
+    // Vérifie que les membres proposés ne sont pas déjà inscrits
+    if (memberIds && memberIds.length > 0) {
+      for (const memberId of memberIds) {
+        const alreadyRegistered = tournament.teams.some(
+          (team) =>
+            team.captainId === memberId ||
+            team.members.some((m) => m.userId === memberId),
+        );
+        if (alreadyRegistered) {
+          res
+            .status(400)
+            .send(`Le joueur ${memberId} est déjà inscrit au tournoi`);
+          return;
         }
       }
-    });
+    }
 
-    if (existingRegistration) {
-      res.status(400).send('L\'utilisateur est déjà inscrit à ce tournoi');
+    // Vérifie la taille de l'équipe
+    const totalPlayers = 1 + (memberIds?.length || 0);
+    if (totalPlayers > tournament.playersPerTeam) {
+      res
+        .status(400)
+        .send(
+          `L'équipe ne peut pas dépasser ${tournament.playersPerTeam} joueurs`,
+        );
       return;
     }
 
-    const registration = await prisma.tournamentRegistration.create({
+    // Création de la team
+    const newTeam = await prisma.team.create({
       data: {
-        userId: userId,
-        TournamentId: tournamentId,
+        name: teamName || `Team de ${req.session.user?.username}`,
+        status:
+          totalPlayers === tournament.playersPerTeam
+            ? "COMPLETE"
+            : "INCOMPLETE",
+        tournamentId: tournament.id,
+        captainId,
+        members: {
+          create: memberIds?.map((userId: string) => ({ userId })) || [],
+        },
+      },
+      include: {
+        members: true,
       },
     });
 
-    res.status(201).json({ message: 'Inscription réussie', registration });
+    res
+      .status(201)
+      .json({ message: "Équipe inscrite avec succès", team: newTeam });
   } catch (error) {
-    console.error('Erreur lors de l\'inscription au tournoi:', error);
-    res.status(500).send('Erreur lors de l\'inscription au tournoi');
+    console.error(error);
+    res.status(500).send("Erreur lors de l'inscription au tournoi");
   }
 };
 
-export const unregisterForGame = async (req: Request, res: Response): Promise<void> => {
-  const { tournamentId } = req.body;
+////////////////////////////////////
+// DÉSINSCRIPTION AU TOURNOI //
+////////////////////////////////////
+
+export const unregisterFromTournament = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  const { teamId } = req.params;
   const userId = req.session.user?.id;
 
-  if (!userId || !tournamentId) {
+  if (!userId || !teamId) {
     res.status(400).send("ID du tournoi ou de l'utilisateur manquant");
-    return
+    return;
   }
 
   try {
-    const registration = await prisma.tournamentRegistration.delete({
-      where: {
-        userId_TournamentId: {
-          userId: userId,
-          TournamentId: tournamentId,
-        },
-      },
+    const team = await prisma.team.findUnique({
+      where: { id: teamId },
+      include: { members: true },
     });
 
-    res.status(200).json({ message: "Désinscription réussie", registration });
+    if (!team) {
+      res.status(404).send("Équipe introuvable");
+      return;
+    }
+
+    if (team.captainId === userId) {
+      // Capitaine -> supprime toute l'équipe
+      await prisma.team.delete({ where: { id: teamId } });
+      res.status(200).json({ message: "Équipe supprimée" });
+    } else {
+      // Membre -> supprime juste le membre
+      const member = team.members.find((m) => m.userId === userId);
+      if (!member) {
+        res.status(400).send("Vous n'êtes pas membre de cette équipe");
+        return;
+      }
+      await prisma.teamMember.delete({ where: { id: member.id } });
+      res.status(200).json({ message: "Vous avez quitté l'équipe" });
+    }
   } catch (error) {
-    console.error("Erreur lors de la désinscription :", error);
+    console.error(error);
     res.status(500).send("Erreur lors de la désinscription du tournoi");
   }
 };
 
+////////////////////////////////////
+// VÉRIFICATION INSCRIPTION //
+////////////////////////////////////
 
-export const checkRegistration = async (req: Request, res: Response): Promise<void> => {
+export const checkRegistration = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const { tournamentId } = req.body;
   const userId = req.session.user?.id;
 
   if (!userId || !tournamentId) {
     res.status(400).send("ID du tournoi ou de l'utilisateur manquant");
-    return
+    return;
   }
 
   try {
-    const existingRegistration = await prisma.tournamentRegistration.findUnique({
+    const teams = await prisma.team.findMany({
       where: {
-        userId_TournamentId: {
-          userId: userId,
-          TournamentId: tournamentId,
-        },
+        tournamentId,
+        OR: [{ captainId: userId }, { members: { some: { userId } } }],
       },
     });
 
-    res.status(200).json({ isRegistered: existingRegistration !== null });
+    res.status(200).json({ isRegistered: teams.length > 0 });
   } catch (error) {
-    console.error('Erreur lors de la vérification de l\'inscription:', error);
-    res.status(500).send('Erreur lors de la vérification de l\'inscription');
+    console.error(error);
+    res.status(500).send("Erreur lors de la vérification de l'inscription");
   }
 };
