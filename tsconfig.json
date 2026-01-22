@@ -108,11 +108,13 @@
     /* Completeness */
     // "skipDefaultLibCheck": true,                      /* Skip type checking .d.ts files that are included with TypeScript. */
     "skipLibCheck": true,                              /* Skip type checking all .d.ts files. */
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
   },
   "include": [
-    "src/**/*.ts",        // Assurez-vous d'inclure tout le code source
+    "src/**/*.ts",        
     "src/types/**/*.d.ts",
-    "prisma/**.ts" // Assurez-vous que les fichiers de déclaration sont inclus
+    "prisma/**.ts" 
   ],
   "exclude": [
     "node_module",

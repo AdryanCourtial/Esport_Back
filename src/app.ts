@@ -5,6 +5,7 @@ import session from "express-session";
 import authRoutes from "./routes/authRoutes";
 import { sessionUserType } from "./types/sessionUser.type";
 import tournamentRouter from "./routes/tournamentRoutes";
+import router from "./routes";
 
 dotenv.config();
 
@@ -38,9 +39,7 @@ app.use(session({
 }));
 
 
-app.use("/auth", authRoutes);
-
-app.use("/tournament", tournamentRouter);
+app.use("/", router);
 
 app.listen(PORT, () => {
   console.log(`Listening on port ${PORT}`);

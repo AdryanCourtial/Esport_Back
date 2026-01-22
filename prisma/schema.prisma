@@ -3,13 +3,17 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
+////////////////////
+// USERS & ROLES //
+////////////////////
+
 model User {
-  id            String   @id @default(uuid())
-  discordId     String   @unique
+  id            String  @id @default(uuid())
+  discordId     String  @unique
   username      String
   discriminator String
   avatar        String?
@@ -21,21 +25,24 @@ model User {
   premiumType   Int?
   publicFlags   Int?
   flags         Int?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  lastName      String
-  firstName     String
-  email         String   @unique
 
-  role   Role   @relation(fields: [roleId], references: [id])
+  firstName String
+  lastName  String
+  email     String @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   roleId String
+  role   Role   @relation(fields: [roleId], references: [id])
 
-  TournamentRegistrations TournamentRegistration[]
-  TournamentResults       TournamentResult[]
-
-  sector   Sector? @relation(fields: [sectorId], references: [id])
   sectorId String?
-  Team     Team[]
+  sector   Sector? @relation(fields: [sectorId], references: [id])
+
+  captainedTeams  Team[]       @relation("TeamCaptain")
+  teamMemberships TeamMember[]
+
+  @@map("users")
 }
 
 model Role {
@@ -43,87 +50,131 @@ model Role {
   role String
 
   users User[]
+
+  @@map("roles")
 }
 
 model Sector {
   id   String @id @default(uuid())
-  Name String
+  name String
 
   users User[]
+
+  @@map("sectors")
 }
 
-model TournamentType {
-  id          String       @id @default(uuid())
-  name        String
+////////////////
+// GAMES     //
+////////////////
+
+model Game {
+  id        String @id @default(uuid())
+  name      String
+  image_url String
+
   tournaments Tournament[]
+
+  @@map("games")
 }
+
+////////////////
+// TOURNAMENT //
+////////////////
 
 model Tournament {
   id                      String  @id @default(uuid())
   name                    String
   description             String?
   condition_participation String?
-  tournamentTypeId        String
+
+  maxPlayers     Int @default(16)
+  playersPerTeam Int @default(1)
 
   registrationStart DateTime
   registrationEnd   DateTime
-
-  tournamentDate DateTime
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  tournamentType TournamentType @relation(fields: [tournamentTypeId], references: [id])
+  tournamentDate    DateTime
 
   gameId String
   game   Game   @relation(fields: [gameId], references: [id])
 
-  registrations TournamentRegistration[]
-
+  teams   Team[]
   results TournamentResult[]
-  Team    Team?              @relation(fields: [teamId], references: [id])
-  teamId  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("tournaments")
+}
+
+//////////////
+// TEAMS    //
+//////////////
+
+enum TeamStatus {
+  INCOMPLETE
+  COMPLETE
+  DISBANDED
 }
 
 model Team {
-  id         String       @id @default(uuid())
-  name       String
-  image_url  String?
-  players    String
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime     @updatedAt
-  userId     String
-  tournament Tournament[]
+  id        String  @id @default(uuid())
+  name      String?
+  image_url String?
 
+  status TeamStatus @default(INCOMPLETE)
+
+  tournamentId String
+  captainId    String
+
+  tournament Tournament @relation(fields: [tournamentId], references: [id])
+  captain    User       @relation("TeamCaptain", fields: [captainId], references: [id])
+
+  members TeamMember[]
+  result  TournamentResult?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@map("teams")
+}
+
+////////////////////////
+// TEAM <-> USER LINK //
+////////////////////////
+
+model TeamMember {
+  id     String @id @default(uuid())
+  teamId String
+  userId String
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
   user User @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@unique([teamId, userId])
+  @@map("team_members")
 }
 
-model TournamentRegistration {
-  id           String   @id @default(uuid())
-  userId       String
-  TournamentId String
-  createdAt    DateTime @default(now())
-
-  user       User       @relation(fields: [userId], references: [id])
-  Tournament Tournament @relation(fields: [TournamentId], references: [id])
-
-  @@unique([userId, TournamentId])
-}
+//////////////////////
+// TOURNAMENT RESULT //
+//////////////////////
 
 model TournamentResult {
-  id           String   @id @default(uuid())
-  userId       String
+  id           String @id @default(uuid())
   tournamentId String
-  score        Int
-  createdAt    DateTime @default(now())
+  teamId       String @unique
 
-  user       User       @relation(fields: [userId], references: [id])
+  score Int?
+  rank  Int?
+
   tournament Tournament @relation(fields: [tournamentId], references: [id])
-}
+  team       Team       @relation(fields: [teamId], references: [id])
 
-model Game {
-  id         String       @id @default(uuid())
-  name       String
-  image_url  String
-  Tournament Tournament[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tournamentId, teamId])
+  @@map("tournament_results")
 }

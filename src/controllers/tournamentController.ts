@@ -1,42 +1,37 @@
 import { Request, Response } from "express";
-import { prisma } from "../../lib/prisma";  
+import { prisma } from "../../lib/prisma";
 import { isAdmin } from "../middlewares/isAdminMiddleware";
 import { TournamentTypeEnum } from "../types/TypeTournament.enum";
 import { console } from "inspector";
 
-export const createTournament = async (req: Request, res: Response): Promise<void> => {
-  const { name, description, TournamentTypeName, tournamentDate, Game, registrationStart, registrationEnd, condition_participation } = req.body;
+export const createTournament = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  const {
+    name,
+    description,
+    tournamentDate,
+    gameId,
+    registrationStart,
+    registrationEnd,
+    condition_participation,
+    maxPlayers,
+    playersPerTeam,
+  } = req.body;
 
-  if (!name || !TournamentTypeName ) {
-    res.status(400).send('Nom du jeu et ID du type de jeu sont requis');
-    return;
-  }
-
-  const validTournamentTypes = Object.values(TournamentTypeEnum);
-
-  if (!validTournamentTypes.includes(TournamentTypeName )) {
-    res.status(400).send('Le type de jeu spécifié est invalide');
+  if (!name || !gameId || !maxPlayers || !playersPerTeam) {
+    res.status(400).send("Champs obligatoires manquants");
     return;
   }
 
   try {
-    const TournamentType = await prisma.tournamentType.findFirst({
-      where: {
-        name: TournamentTypeName, 
-      },
+    const game = await prisma.game.findUnique({
+      where: { id: gameId },
     });
-    if (!TournamentType) {
-      res.status(400).send('Le type de jeu spécifié n\'existe pas');
-      return;
-    }
 
-    const GameChoise = await prisma.game.findFirst({
-      where: {
-        name: Game,
-      },
-    });
-    if (!GameChoise) {
-      res.status(400).send('Le jeu spécifié n\'existe pas');
+    if (!game) {
+      res.status(400).send("Le jeu spécifié n'existe pas");
       return;
     }
 
@@ -45,169 +40,157 @@ export const createTournament = async (req: Request, res: Response): Promise<voi
         name,
         description,
         condition_participation,
-        tournamentTypeId: TournamentType.id,
-        gameId: GameChoise?.id,
+        maxPlayers,
+        playersPerTeam,
+        gameId,
         tournamentDate: new Date(tournamentDate),
         registrationStart: new Date(registrationStart),
         registrationEnd: new Date(registrationEnd),
-
       },
     });
 
-    console.log('Jeu créé avec succès:', newTournament);
-    res.status(201).json(newTournament);  
+    res.status(201).json(newTournament);
   } catch (error) {
-    console.error('Erreur lors de la création du jeu:', error);
-    res.status(500).send('Erreur lors de la création du jeu');
+    console.error(error);
+    res.status(500).send("Erreur lors de la création du tournoi");
   }
 };
 
-
-export const getTournament = async (req: Request, res: Response): Promise<void> => {
-  
+export const getTournament = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   try {
-    const Tournament = await prisma.tournament.findMany({
+    const tournaments = await prisma.tournament.findMany({
       select: {
-          id: true,
+        id: true,
         name: true,
         description: true,
         registrationStart: true,
         registrationEnd: true,
         tournamentDate: true,
-        tournamentType: {
-          select: {
-            name:true
-          }
-        },
+        maxPlayers: true,
+        playersPerTeam: true,
         game: {
           select: {
             name: true,
             image_url: true,
-          }
+          },
         },
-        },
-    })
-    
-    res.status(200).json(Tournament);
+      },
+    });
 
+    res.status(200).json(tournaments);
   } catch (error) {
-    console.error('Erreur lors de la récupération des jeux: ', error)
-    res.status(500).send('Erreur lors de la récupération des jeux');
+    console.error(error);
+    res.status(500).send("Erreur lors de la récupération des tournois");
   }
 };
 
+export const addResultToTournament = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  const { tournamentId, teamId, score, rank } = req.body;
 
-export const addResultToTournament = async (req: Request, res: Response): Promise<void> => {
-  const { tournamentId, userId, score } = req.body;
-
-  if (!tournamentId || !userId || score === undefined) {
-    res.status(400).send('Tous les champs sont requis');
+  if (!tournamentId || !teamId) {
+    res.status(400).send("Champs requis manquants");
     return;
   }
 
   try {
-    const existingResult = await prisma.tournamentResult.findFirst({
+    const existingResult = await prisma.tournamentResult.findUnique({
       where: {
-        userId: userId,
-        tournamentId: tournamentId,
+        tournamentId_teamId: {
+          tournamentId,
+          teamId,
+        },
       },
     });
 
     if (existingResult) {
       const updatedResult = await prisma.tournamentResult.update({
         where: { id: existingResult.id },
-        data: { score },
+        data: { score, rank },
       });
       res.status(200).json(updatedResult);
     } else {
-       const newResult = await prisma.tournamentResult.create({
+      const newResult = await prisma.tournamentResult.create({
         data: {
           tournamentId,
-          userId,
+          teamId,
           score,
+          rank,
         },
       });
       res.status(201).json(newResult);
     }
   } catch (error) {
-    res.status(500).send('Erreur lors de l\'ajout ou de la mise à jour des résultats');
+    console.error(error);
+    res.status(500).send("Erreur lors de l'ajout du résultat");
   }
 };
 
+export const seeDetailTournament = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  const { id } = req.params;
 
-export const seeDetailTournament = async (req: Request, res: Response): Promise<void> => {
   try {
-      const { id } = req.params;
-
-    const Tournament = await prisma.tournament.findUnique({
-      where: {
-        id: id,
-      },
-      select: {
-        id: true,
-        name: true,
-        description: true,
-        condition_participation:true,
-        tournamentType: {
-          select: {
-            name: true,
+    const tournament = await prisma.tournament.findUnique({
+      where: { id },
+      include: {
+        game: true,
+        teams: {
+          include: {
+            members: {
+              include: { user: true },
+            },
           },
         },
-        game: {
-          select: {
-            name: true,
-            image_url: true,
+        results: {
+          include: {
+            team: {
+              include: {
+                members: {
+                  include: { user: true },
+                },
+              },
+            },
           },
         },
-        tournamentDate: true,
-        registrationStart: true,
-        registrationEnd:true
       },
     });
 
-    if (!Tournament) {
+    if (!tournament) {
       res.status(404).send("Tournoi non trouvé");
-      return; 
+      return;
     }
 
-    console.log("Je suis les tournois", Tournament);
-
-    res.status(200).json(Tournament);
+    res.status(200).json(tournament);
   } catch (error) {
-    console.error("Erreur lors de la récupération du tournoi:", error);
+    console.error(error);
     res.status(500).send("Erreur serveur");
   }
 };
 
-
-
-export const getAdminTournament = async (req: Request, res: Response): Promise<void> => {
-  
+export const getAdminTournament = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   try {
     const Tournament = await prisma.tournament.findMany({
-      select: {
-          id: true,
-        name: true,
-        description: true,
-        tournamentType: {
-          select: {
-            name:true
-          }
-        },
-        game: {
-          select: {
-            name: true,
-            image_url: true,
-          },
-        },
-        },
-    })
-
+      include: {
+        game: true,
+        teams: true,
+        results: true,
+      },
+    });
 
     res.status(200).json(Tournament);
-
   } catch (error) {
-    console.error('Erreur lors de la récupération des jeux: ', error)
-    res.status(500).send('Erreur lors de la récupération des jeux');
+    console.error("Erreur lors de la récupération des jeux: ", error);
+    res.status(500).send("Erreur lors de la récupération des jeux");
   }
 };
