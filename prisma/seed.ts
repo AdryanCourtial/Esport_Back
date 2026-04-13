@@ -1,12 +1,6 @@
 import { prisma } from "../lib/prisma";  
 
 async function main() {
-  await prisma.tournamentType.createMany({
-    data: [
-      { name: "SOLO" },
-      { name: "MULTIPLAYER" },
-    ],
-  });
   await prisma.role.createMany({
     data: [
       { role: "ADMIN" },
